@@ -255,7 +255,9 @@
 </div>
 
 <script>
-  const TRIGGER_ENDPOINT = ""; // Udfyldes i Trin 7 med serverless-function URL
+  // Sæt til din Vercel-URL efter deployment, f.eks.:
+  // const TRIGGER_ENDPOINT = "https://agent-xxx.vercel.app/api/trigger";
+  const TRIGGER_ENDPOINT = "";
 
   async function startAnalyse() {
     const input = document.getElementById("marked-input");
