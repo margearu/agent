@@ -293,9 +293,13 @@
         input.value = "";
         status.textContent = `✓ Analyse af "${marked}" er startet. Tjek igen om 5–10 minutter.`;
         status.className = "form-status ok";
+      } else if (res.status === 429) {
+        const data = await res.json().catch(() => ({}));
+        status.textContent = `⏳ ${data.error || "For mange analyser i gang — prøv igen om lidt."}`;
+        status.className = "form-status err";
       } else {
-        const err = await res.text();
-        status.textContent = `Fejl (${res.status}): ${err}`;
+        const data = await res.json().catch(() => ({}));
+        status.textContent = `Fejl (${res.status}): ${data.error || res.statusText}`;
         status.className = "form-status err";
       }
     } catch (e) {
