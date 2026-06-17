@@ -55,7 +55,18 @@ Angiv tydeligt skellet mellem faktabaserede oplysninger og kvalificerede vurderi
 
 RESEARCH_PROMPT_TEMPLATE = """Udfør en grundig markedsresearch om det danske {marked_navn}-marked.
 
-Søg efter og indsaml data til alle nedenstående felter. Brug web search aktivt.
+VIGTIG INSTRUKTION — KONKURRENTER:
+Søg systematisk efter ALLE relevante aktører i markedet, inddelt i kategorier:
+1. Store kæder / kapitalkæder (søg specifikt på de 5-8 største)
+2. Frivillige kæder og indkøbsfællesskaber
+3. Danske producenter og designbrands
+4. Online-spillere og nichespillere
+5. Internationale aktører med dansk tilstedeværelse
+
+Lever MINIMUM 8 konkurrenter i JSON-outputtet — hellere 12 end 4.
+For hvert marked: søg brancheorganisationernes hjemmesider, CVR-udtræk og Optikerforeningen/brancheorganisationen.
+
+Søg efter og indsaml data til alle nedenstående felter. Brug web search aktivt (brug alle 30 søgninger).
 Returner et JSON-objekt med PRÆCIS disse felter — udfyld alle felter, brug "N/A" eller estimater med usikkerhedsangivelse hvis data ikke kan verificeres.
 
 {{
@@ -190,8 +201,10 @@ Returner et JSON-objekt med PRÆCIS disse felter — udfyld alle felter, brug "N
   "data_dato": "<dato for seneste data>"
 }}
 
-Udfyld alle felter med reelle data. Start med de bredeste søgninger (markedsstørrelse, aktører)
-og gå derefter i dybden på konkurrenter og trends. Returner KUN det rene JSON-objekt, ingen forklarende tekst.
+Udfyld alle felter med reelle data.
+Søgerækkefølge: 1) markedsstørrelse og omsætning, 2) alle aktører systematisk pr. kategori,
+3) SWOT pr. aktør, 4) trends og drivere.
+Returner KUN det rene JSON-objekt, ingen forklarende tekst.
 """
 
 
@@ -206,7 +219,7 @@ def research_market(marked_navn: str) -> dict:
         model="claude-sonnet-4-6",
         max_tokens=16000,
         system=RESEARCH_SYSTEM_PROMPT,
-        tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": 20}],
+        tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": 30}],
         messages=[{"role": "user", "content": prompt}],
     ) as stream:
         response = stream.get_final_message()
