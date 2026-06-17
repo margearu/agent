@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Markedsanalyse</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #0a0a0a;
+      --white: #ffffff;
+      --blue: #0057ff;
+      --blue-dark: #0040cc;
+      --grey-100: #f5f5f5;
+      --grey-200: #e8e8e8;
+      --grey-500: #888;
+      --grey-700: #333;
+      --font-display: 'Inter', system-ui, -apple-system, sans-serif;
+      --radius: 16px;
+      --radius-sm: 8px;
+    }
+
+    body {
+      font-family: var(--font-display);
+      background: var(--white);
+      color: var(--black);
+      min-height: 100vh;
+    }
+
+    /* ── Nav ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 40px;
+      border-bottom: 1px solid var(--grey-200);
+      position: sticky;
+      top: 0;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+    }
+    .nav-logo {
+      font-weight: 800;
+      font-size: 16px;
+      letter-spacing: -0.02em;
+    }
+    .nav-logo span { color: var(--blue); }
+
+    /* ── Hero ── */
+    .hero {
+      max-width: 900px;
+      margin: 80px auto 64px;
+      padding: 0 24px;
+      text-align: center;
+    }
+    .hero-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--blue);
+      border: 1px solid var(--blue);
+      border-radius: 100px;
+      padding: 4px 12px;
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: clamp(40px, 7vw, 80px);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 20px;
+    }
+    .hero p {
+      font-size: 18px;
+      color: var(--grey-500);
+      line-height: 1.6;
+      max-width: 560px;
+      margin: 0 auto 40px;
+    }
+
+    /* ── Formular ── */
+    .form-wrap {
+      display: flex;
+      gap: 12px;
+      max-width: 540px;
+      margin: 0 auto 16px;
+    }
+    .form-input {
+      flex: 1;
+      padding: 16px 20px;
+      font-size: 16px;
+      font-family: var(--font-display);
+      border: 2px solid var(--grey-200);
+      border-radius: var(--radius-sm);
+      outline: none;
+      transition: border-color 0.15s;
+      background: var(--white);
+    }
+    .form-input:focus { border-color: var(--blue); }
+    .form-input::placeholder { color: var(--grey-500); }
+    .btn-primary {
+      padding: 16px 28px;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: var(--font-display);
+      background: var(--blue);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, opacity 0.15s;
+    }
+    .btn-primary:hover { background: var(--blue-dark); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .form-hint {
+      font-size: 12px;
+      color: var(--grey-500);
+      text-align: center;
+    }
+    .form-status {
+      margin-top: 16px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      min-height: 20px;
+    }
+    .form-status.ok { color: #16a34a; }
+    .form-status.err { color: #dc2626; }
+
+    /* ── Analyser-grid ── */
+    .section {
+      max-width: 1100px;
+      margin: 0 auto 80px;
+      padding: 0 24px;
+    }
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--grey-500);
+      margin-bottom: 24px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      border: 1px solid var(--grey-200);
+      border-radius: var(--radius);
+      padding: 28px;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .card:hover {
+      border-color: var(--black);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+    .card-tag {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--grey-500);
+      margin-bottom: 12px;
+    }
+    .card-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+      line-height: 1.1;
+    }
+    .card-desc {
+      font-size: 13px;
+      color: var(--grey-500);
+      line-height: 1.5;
+    }
+    .card-arrow {
+      margin-top: 20px;
+      font-size: 20px;
+      color: var(--grey-200);
+      transition: color 0.15s;
+    }
+    .card:hover .card-arrow { color: var(--black); }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 0;
+      color: var(--grey-500);
+      font-size: 15px;
+      border: 2px dashed var(--grey-200);
+      border-radius: var(--radius);
+    }
+
+    /* ── Spinner ── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Markeds<span>analyse</span></div>
+</nav>
+
+<div class="hero">
+  <div class="hero-tag">AI-drevet · Kun danske kilder</div>
+  <h1>Dansk<br>markedsanalyse</h1>
+  <p>Indtast et marked og få en dyb, struktureret analyse baseret på offentligt tilgængelige danske kilder — på få minutter.</p>
+
+  <div class="form-wrap">
+    <input
+      id="marked-input"
+      class="form-input"
+      type="text"
+      placeholder="F.eks. optik, telekommunikation, dagligvarer …"
+      autocomplete="off"
+      maxlength="80"
+    >
+    <button class="btn-primary" id="start-btn" onclick="startAnalyse()">
+      Begynd analyse →
+    </button>
+  </div>
+  <div class="form-hint">Analysen tager typisk 3–8 minutter. Du vil se resultatet i listen nedenfor.</div>
+  <div class="form-status" id="form-status"></div>
+</div>
+
+<div class="section">
+  <div class="section-label" id="grid-label">Genererede analyser</div>
+  <div class="grid" id="analyser-grid">
+    <div class="empty-state" id="empty-state">
+      Ingen analyser endnu — start med at indtaste et marked ovenfor.
+    </div>
+  </div>
+</div>
+
+<script>
+  const TRIGGER_ENDPOINT = ""; // Udfyldes i Trin 7 med serverless-function URL
+
+  async function startAnalyse() {
+    const input = document.getElementById("marked-input");
+    const btn = document.getElementById("start-btn");
+    const status = document.getElementById("form-status");
+    const marked = input.value.trim();
+
+    if (!marked) {
+      status.textContent = "Indtast venligst et markedsnavn.";
+      status.className = "form-status err";
+      return;
+    }
+
+    if (!TRIGGER_ENDPOINT) {
+      status.textContent = "Trigger-endpoint ikke konfigureret endnu (Trin 7).";
+      status.className = "form-status err";
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Starter analyse …';
+    status.textContent = "";
+    status.className = "form-status";
+
+    try {
+      const res = await fetch(TRIGGER_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ marked: marked }),
+      });
+
+      if (res.ok) {
+        input.value = "";
+        status.textContent = `✓ Analyse af "${marked}" er startet. Tjek igen om 5–10 minutter.`;
+        status.className = "form-status ok";
+      } else {
+        const err = await res.text();
+        status.textContent = `Fejl (${res.status}): ${err}`;
+        status.className = "form-status err";
+      }
+    } catch (e) {
+      status.textContent = "Netværksfejl — prøv igen.";
+      status.className = "form-status err";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Begynd analyse →";
+    }
+  }
+
+  document.getElementById("marked-input").addEventListener("keydown", e => {
+    if (e.key === "Enter") startAnalyse();
+  });
+
+  async function loadManifest() {
+    try {
+      const res = await fetch("manifest.json?t=" + Date.now());
+      if (!res.ok) return;
+      const manifest = await res.json();
+      renderGrid(manifest);
+    } catch (_) {
+      // manifest.json endnu ikke genereret — vis empty state
+    }
+  }
+
+  function renderGrid(manifest) {
+    const grid = document.getElementById("analyser-grid");
+    const empty = document.getElementById("empty-state");
+    const label = document.getElementById("grid-label");
+
+    if (!manifest.analyser || manifest.analyser.length === 0) return;
+
+    empty.remove();
+    label.textContent = `${manifest.analyser.length} ${manifest.analyser.length === 1 ? "analyse" : "analyser"}`;
+
+    // Nyeste først
+    const sorted = [...manifest.analyser].sort((a, b) => b.dato.localeCompare(a.dato));
+    sorted.forEach(item => {
+      const card = document.createElement("a");
+      card.className = "card";
+      card.href = `${item.slug}/index.html`;
+      card.innerHTML = `
+        <div class="card-tag">Markedsanalyse · ${item.aar}</div>
+        <div class="card-title">${esc(item.navn)}</div>
+        <div class="card-desc">${esc(item.dato)}</div>
+        <div class="card-arrow">→</div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  function esc(str) {
+    return String(str).replace(/[&<>"']/g, c =>
+      ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])
+    );
+  }
+
+  loadManifest();
+</script>
+</body>
+</html>
