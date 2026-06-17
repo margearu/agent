@@ -209,35 +209,35 @@ Returner KUN det rene JSON-objekt, ingen forklarende tekst.
 
 
 def research_market(marked_navn: str) -> dict:
-    client = anthropic.Anthropic(timeout=600.0)  # 10 min — web search kan være langsom
+    # Høj timeout + max 3 forsøg ved netværksfejl
+    client = anthropic.Anthropic(
+        timeout=600.0,
+        max_retries=3,
+    )
 
     prompt = RESEARCH_PROMPT_TEMPLATE.format(marked_navn=marked_navn)
 
-    # Web search og thinking kan ikke kombineres — brug web search alene her.
-    # Thinking bruges i analyze.py (Opus-fasen) hvor det giver størst værdi.
-    with client.messages.stream(
+    # Brug create() i stedet for stream() — mere robust over dårlige forbindelser
+    # da svaret buffereres server-side og returneres samlet.
+    response = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=16000,
         system=RESEARCH_SYSTEM_PROMPT,
         tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": 5}],
         messages=[{"role": "user", "content": prompt}],
-    ) as stream:
-        response = stream.get_final_message()
+    )
 
     print(f"Stop reason: {response.stop_reason}", file=sys.stderr)
 
-    # Udtræk JSON fra tekstblokke (spring tool_use/tool_result blokke over)
     json_text = ""
     for block in response.content:
         if block.type == "text":
             json_text += block.text
 
     if not json_text.strip():
-        # Vis alle blok-typer til debugging
         types = [b.type for b in response.content]
         raise ValueError(f"Intet tekst-output fra Claude. Bloktyper: {types}")
 
-    # Find JSON-objektet (ignorer evt. markdown-wrapper som ```json ... ```)
     start = json_text.find("{")
     end = json_text.rfind("}") + 1
     if start == -1 or end == 0:
