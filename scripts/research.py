@@ -209,7 +209,7 @@ Returner KUN det rene JSON-objekt, ingen forklarende tekst.
 
 
 def research_market(marked_navn: str) -> dict:
-    client = anthropic.Anthropic()
+    client = anthropic.Anthropic(timeout=600.0)  # 10 min — web search kan være langsom
 
     prompt = RESEARCH_PROMPT_TEMPLATE.format(marked_navn=marked_navn)
 
@@ -219,7 +219,7 @@ def research_market(marked_navn: str) -> dict:
         model="claude-sonnet-4-6",
         max_tokens=16000,
         system=RESEARCH_SYSTEM_PROMPT,
-        tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": 30}],
+        tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": 20}],
         messages=[{"role": "user", "content": prompt}],
     ) as stream:
         response = stream.get_final_message()
