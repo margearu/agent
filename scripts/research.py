@@ -9,8 +9,13 @@ Output: JSON til stdout
 """
 
 import sys
+import io
 import json
 import anthropic
+
+# Tving UTF-8 på stdout/stderr uanset terminal-locale
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 RESEARCH_SYSTEM_PROMPT = """Du er en erfaren markedsresearcher specialiseret i det danske marked.
 Din opgave er at indsamle faktuelle data om et givet marked via websøgning.
@@ -176,27 +181,35 @@ def research_market(marked_navn: str) -> dict:
 
     prompt = RESEARCH_PROMPT_TEMPLATE.format(marked_navn=marked_navn)
 
+    # Web search og thinking kan ikke kombineres — brug web search alene her.
+    # Thinking bruges i analyze.py (Opus-fasen) hvor det giver størst værdi.
     with client.messages.stream(
         model="claude-sonnet-4-6",
         max_tokens=16000,
         system=RESEARCH_SYSTEM_PROMPT,
         tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": 20}],
-        thinking={"type": "adaptive"},
         messages=[{"role": "user", "content": prompt}],
     ) as stream:
         response = stream.get_final_message()
 
-    # Udtræk JSON fra tekstblokke
+    print(f"Stop reason: {response.stop_reason}", file=sys.stderr)
+
+    # Udtræk JSON fra tekstblokke (spring tool_use/tool_result blokke over)
     json_text = ""
     for block in response.content:
         if block.type == "text":
             json_text += block.text
 
-    # Find JSON-objektet
+    if not json_text.strip():
+        # Vis alle blok-typer til debugging
+        types = [b.type for b in response.content]
+        raise ValueError(f"Intet tekst-output fra Claude. Bloktyper: {types}")
+
+    # Find JSON-objektet (ignorer evt. markdown-wrapper som ```json ... ```)
     start = json_text.find("{")
     end = json_text.rfind("}") + 1
     if start == -1 or end == 0:
-        raise ValueError(f"Intet JSON fundet i svar. Svar: {json_text[:500]}")
+        raise ValueError(f"Intet JSON-objekt i svaret. Første 500 tegn:\n{json_text[:500]}")
 
     return json.loads(json_text[start:end])
 
@@ -210,7 +223,11 @@ def main():
     marked_navn = sys.argv[1]
     print(f"Starter research: {marked_navn} ...", file=sys.stderr)
 
-    data = research_market(marked_navn)
+    try:
+        data = research_market(marked_navn)
+    except Exception as e:
+        print(f"FEJL i research: {e}", file=sys.stderr)
+        sys.exit(1)
 
     print(json.dumps(data, ensure_ascii=False, indent=2))
     print(f"Research færdig. Fundet {len(data.get('konkurrenter', []))} konkurrenter, "

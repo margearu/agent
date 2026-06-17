@@ -10,9 +10,13 @@ Output: JSON til stdout
 """
 
 import sys
+import io
 import json
 import pathlib
 import anthropic
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 # Indlæs system-prompt fra fil (relativ til dette scripts placering)
 SCRIPT_DIR = pathlib.Path(__file__).parent
