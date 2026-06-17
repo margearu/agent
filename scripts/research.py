@@ -20,6 +20,22 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
+# Workaround: httpx bruger ASCII til headers men platform-info på dansk macOS
+# kan indeholde ikke-ASCII. Patch normalize-funktionen til at bruge latin-1.
+try:
+    import httpx._models as _httpx_models
+    _orig_normalize = _httpx_models._normalize_header_value
+    def _safe_normalize(value, encoding):
+        if isinstance(value, str):
+            try:
+                value.encode(encoding or "ascii")
+            except (UnicodeEncodeError, LookupError):
+                value = value.encode("ascii", "replace").decode("ascii")
+        return _orig_normalize(value, encoding)
+    _httpx_models._normalize_header_value = _safe_normalize
+except Exception:
+    pass  # Nyere httpx-versioner har ikke dette problem
+
 RESEARCH_SYSTEM_PROMPT = """Du er en erfaren markedsresearcher specialiseret i det danske marked.
 Din opgave er at indsamle faktuelle data om et givet marked via websøgning.
 

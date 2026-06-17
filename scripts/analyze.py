@@ -19,6 +19,21 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
+try:
+    import httpx._models as _httpx_models
+    _orig_normalize = _httpx_models._normalize_header_value
+    def _safe_normalize(value, encoding):
+        if isinstance(value, str):
+            try:
+                value.encode(encoding or "ascii")
+            except (UnicodeEncodeError, LookupError):
+                value = value.encode("ascii", "replace").decode("ascii")
+        return _orig_normalize(value, encoding)
+    _httpx_models._normalize_header_value = _safe_normalize
+except Exception:
+    pass
+
+
 # Indlæs system-prompt fra fil (relativ til dette scripts placering)
 SCRIPT_DIR = pathlib.Path(__file__).parent
 SYSTEM_PROMPT_PATH = SCRIPT_DIR.parent / "prompts" / "strategisk_konsulent_system_prompt.md"
