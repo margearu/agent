@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{MARKED_NAVN}} — Markedsanalyse {{AAR}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;0,9..40,900;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════
+   TOKENS & RESET
+═══════════════════════════════════════ */
+:root {
+  --black:      #0A0A0A;
+  --white:      #F8F8F6;
+  --offwhite:   #F0F0EC;
+  --blue:       #1A1AFF;
+  --blue-light: #6B6BFF;
+  --blue-dim:   #E8E8FF;
+  --grey-100:   #F4F4F0;
+  --grey-200:   #E8E8E4;
+  --grey-300:   #D0D0CC;
+  --grey-400:   #A0A0A0;
+  --grey-500:   #6B6B6B;
+  --grey-600:   #444444;
+  --green:      #22c55e;
+  --red:        #ef4444;
+  --orange:     #f97316;
+
+  --nav-h:      64px;
+  --max-w:      1400px;
+  --pad:        40px;
+  --radius:     999px;
+  --radius-card:12px;
+
+  --font-display: 'DM Sans', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+  --font-mono:    'DM Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--white);
+  color: var(--black);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.container { max-width: var(--max-w); margin: 0 auto; padding: 0 var(--pad); }
+.section { padding: 80px 0; }
+.section-sm { padding: 56px 0; }
+.hidden { display: none !important; }
+
+.display-xl {
+  font-family: var(--font-display);
+  font-size: clamp(56px, 8vw, 112px);
+  font-weight: 900; line-height: 0.92;
+  letter-spacing: 2.5px; text-transform: uppercase;
+}
+.display-lg {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 5vw, 64px);
+  font-weight: 900; line-height: 0.95;
+  letter-spacing: 2.5px; text-transform: uppercase;
+}
+.display-md {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3vw, 40px);
+  font-weight: 700; line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+.label-tag {
+  font-family: var(--font-mono);
+  font-size: 11px; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--grey-400);
+}
+.body-lg { font-size: 17px; line-height: 1.65; color: var(--grey-600); }
+.body-md { font-size: 14px; line-height: 1.6; color: var(--grey-600); }
+.body-sm { font-size: 12px; line-height: 1.5; color: var(--grey-500); }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 22px; border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; border: 2px solid transparent;
+  transition: all 0.18s ease;
+  text-decoration: none; white-space: nowrap; user-select: none;
+}
+.btn-primary { background: var(--blue); color: white; border-color: var(--blue); }
+.btn-primary:hover { background: #0000dd; border-color: #0000dd; transform: translateY(-1px); }
+.btn-secondary { background: transparent; color: var(--grey-600); border-color: var(--grey-300); }
+.btn-secondary:hover { border-color: var(--grey-500); color: var(--black); }
+.btn-selected, .btn.active { background: var(--black); color: white; border-color: var(--black); }
+
+.pill-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 32px; }
+.pill-tab {
+  padding: 8px 20px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  border: 2px solid var(--grey-200);
+  background: white; color: var(--grey-500);
+  transition: all 0.18s;
+}
+.pill-tab:hover { border-color: var(--grey-400); color: var(--black); }
+.pill-tab.active { background: var(--black); color: white; border-color: var(--black); }
+
+#navbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: var(--nav-h);
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--grey-200);
+  transition: box-shadow 0.3s;
+}
+.nav-inner {
+  max-width: var(--max-w); margin: 0 auto; padding: 0 var(--pad);
+  height: 100%; display: flex; align-items: center; justify-content: space-between;
+}
+.nav-logo {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px; font-weight: 700;
+  letter-spacing: 0; text-transform: uppercase;
+  color: var(--black); cursor: pointer; text-decoration: none;
+}
+.nav-logo span { color: var(--blue); }
+.nav-links { display: flex; gap: 4px; align-items: center; }
+.nav-link {
+  padding: 7px 14px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 500; color: var(--grey-500);
+  cursor: pointer; border: none; background: none;
+  transition: all 0.15s; font-family: var(--font-body);
+}
+.nav-link:hover { color: var(--black); background: var(--grey-100); }
+.nav-link.active { background: var(--black); color: white; }
+
+.page { display: none; min-height: 100vh; padding-top: var(--nav-h); }
+.page.active { display: block; }
+
+/* ── Home page ── */
+#page-home {
+  background: var(--blue); color: white;
+  display: none; height: 100vh; min-height: 600px;
+  padding-top: var(--nav-h);
+  position: relative; overflow: hidden;
+  flex-direction: column;
+}
+#page-home.active { display: flex; }
+.home-noise {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.4;
+}
+.home-grid-lines {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 80px 80px;
+}
+.home-hero {
+  position: relative; z-index: 1; flex: 1;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 40px var(--pad) 32px;
+  max-width: var(--max-w); width: 100%; margin: 0 auto;
+}
+.home-tag {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: rgba(255,255,255,0.5); margin-bottom: 20px;
+  display: flex; align-items: center; gap: 10px;
+}
+.home-tag::before { content: ''; display: block; width: 32px; height: 1px; background: rgba(255,255,255,0.3); }
+.home-title {
+  font-family: var(--font-display);
+  font-size: clamp(48px, 7vw, 100px);
+  font-weight: 900; line-height: 0.9;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: white; margin-bottom: 24px;
+}
+.home-title em { font-style: normal; color: rgba(255,255,255,0.28); }
+.home-desc { max-width: 560px; font-size: 16px; line-height: 1.6; color: rgba(255,255,255,0.72); margin-bottom: 28px; }
+.home-cta { display: flex; gap: 12px; flex-wrap: wrap; }
+.btn-white { background: white; color: var(--blue); border-color: white; font-weight: 700; }
+.btn-white:hover { background: var(--offwhite); transform: translateY(-1px); }
+.btn-ghost { background: transparent; color: white; border-color: rgba(255,255,255,0.3); }
+.btn-ghost:hover { border-color: white; background: rgba(255,255,255,0.08); }
+
+.home-kpis { position: relative; z-index: 1; border-top: 1px solid rgba(255,255,255,0.12); width: 100%; }
+.kpi-strip { display: grid; grid-template-columns: repeat(5, 1fr); max-width: var(--max-w); margin: 0 auto; padding: 0 var(--pad); }
+.kpi-item { padding: 20px 20px 24px; border-right: 1px solid rgba(255,255,255,0.1); }
+.kpi-item:last-child { border-right: none; }
+.kpi-num { font-family: var(--font-display); font-size: clamp(22px, 2.8vw, 36px); font-weight: 800; color: white; letter-spacing: -0.03em; line-height: 1; margin-bottom: 8px; }
+.kpi-num sup { font-size: 0.45em; }
+.kpi-label { font-size: 11px; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.08em; line-height: 1.4; }
+.kpi-sub { font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 3px; }
+
+/* ── Cards ── */
+.card { background: white; border-radius: var(--radius-card); border: 1px solid var(--grey-200); padding: 24px; }
+.card-dark { background: var(--black); border-color: var(--grey-600); color: white; }
+.card-blue { background: var(--blue-dim); border-color: #c0c0ff; }
+
+.section-header { margin-bottom: 48px; }
+.section-header .label-tag { margin-bottom: 12px; }
+.section-header .display-lg { margin-bottom: 16px; }
+.section-divider { width: 100%; height: 1px; background: var(--grey-200); margin: 8px 0 0; }
+
+/* ── Stat grid ── */
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--grey-200); border-radius: var(--radius-card); overflow: hidden; background: white; }
+.stat-item { padding: 28px 20px; border-right: 1px solid var(--grey-200); }
+.stat-item:last-child { border-right: none; }
+.stat-num { font-family: var(--font-display); font-size: clamp(24px, 3vw, 38px); font-weight: 800; letter-spacing: -0.03em; line-height: 1; margin-bottom: 8px; color: var(--black); }
+.stat-num.accent { color: var(--blue); }
+.stat-lbl { font-size: 11px; color: var(--grey-400); text-transform: uppercase; letter-spacing: 0.07em; line-height: 1.4; }
+.stat-sub { font-size: 10px; color: var(--grey-400); margin-top: 3px; }
+.footnote { font-size: 10.5px; color: var(--grey-400); line-height: 1.55; margin-top: 12px; font-style: italic; }
+
+/* ── Bar chart ── */
+.bar-chart { display: flex; flex-direction: column; gap: 10px; }
+.bar-row { display: flex; align-items: center; gap: 14px; }
+.bar-name { width: 160px; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+.bar-track { flex: 1; height: 32px; background: var(--grey-100); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 12px; font-size: 12px; font-weight: 700; color: white; white-space: nowrap; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* ── SWOT ── */
+.swot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.swot-card { background: var(--offwhite); border-radius: var(--radius-card); border: 1px solid var(--grey-200); padding: 18px; }
+.swot-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid; }
+.swot-header h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+.styrker .swot-header { border-color: var(--green); }
+.styrker .swot-header h4 { color: #15803d; }
+.svagheder .swot-header { border-color: var(--red); }
+.svagheder .swot-header h4 { color: #b91c1c; }
+.muligheder .swot-header { border-color: var(--blue); }
+.muligheder .swot-header h4 { color: var(--blue); }
+.trusler .swot-header { border-color: var(--orange); }
+.trusler .swot-header h4 { color: #c2410c; }
+.swot-list { list-style: none; }
+.swot-list li { font-size: 12.5px; color: var(--grey-600); padding: 5px 0 5px 14px; position: relative; border-bottom: 1px solid var(--grey-200); line-height: 1.45; }
+.swot-list li:last-child { border-bottom: none; }
+.swot-list li::before { content: ''; position: absolute; left: 3px; top: 11px; width: 5px; height: 5px; border-radius: 50%; }
+.styrker .swot-list li::before { background: var(--green); }
+.svagheder .swot-list li::before { background: var(--red); }
+.muligheder .swot-list li::before { background: var(--blue); }
+.trusler .swot-list li::before { background: var(--orange); }
+
+.scorecard-section { background: white; border-radius: var(--radius-card); border: 1px solid var(--grey-200); padding: 20px 24px; margin-top: 12px; }
+.scorecard-title { font-size: 12px; font-weight: 700; color: var(--grey-600); margin-bottom: 14px; }
+.sc-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.sc-label { font-size: 12px; color: var(--grey-500); width: 170px; flex-shrink: 0; }
+.sc-track { flex: 1; height: 8px; background: var(--grey-100); border-radius: 4px; overflow: hidden; }
+.sc-bar { height: 100%; border-radius: 4px; }
+.sc-val { font-size: 12px; font-weight: 600; width: 28px; text-align: right; }
+.sc-legend { font-size: 10px; color: var(--grey-400); margin-top: 8px; }
+
+.company-header { display: flex; align-items: flex-start; gap: 16px; background: white; border: 1px solid var(--grey-200); border-radius: var(--radius-card); padding: 16px 20px; margin-bottom: 16px; }
+.co-badge { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; color: white; flex-shrink: 0; }
+.co-name { font-size: 15px; font-weight: 700; }
+.co-desc { font-size: 12px; color: var(--grey-500); margin-top: 3px; line-height: 1.5; }
+
+/* ── CX table ── */
+.cx-table { width: 100%; border-collapse: collapse; background: white; border-radius: var(--radius-card); overflow: hidden; border: 1px solid var(--grey-200); font-size: 12px; }
+.cx-table th { background: var(--black); color: white; padding: 10px 14px; font-size: 11px; text-align: left; font-weight: 600; font-family: var(--font-body); }
+.cx-table td { padding: 10px 14px; border-bottom: 1px solid var(--grey-100); vertical-align: middle; }
+.cx-table tr:last-child td { border-bottom: none; }
+.cx-table tr:hover td { background: var(--grey-100); }
+.cx-table td:first-child { font-weight: 600; color: var(--black); }
+
+/* ── Trend cards ── */
+.trend-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--grey-200); border: 1px solid var(--grey-200); border-radius: var(--radius-card); overflow: hidden; }
+.trend-card { background: white; padding: 24px; }
+.trend-tag { font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--grey-400); margin-bottom: 10px; }
+.trend-title { font-family: var(--font-display); font-size: 16px; font-weight: 700; line-height: 1.2; margin-bottom: 10px; }
+.trend-body { font-size: 12.5px; color: var(--grey-600); line-height: 1.55; }
+
+/* ── Opportunities ── */
+.opp-row { display: grid; grid-template-columns: 180px 1fr 100px; gap: 24px; padding: 20px 0; border-bottom: 1px solid var(--grey-200); align-items: start; }
+.opp-row:first-child { border-top: 1px solid var(--grey-200); }
+.opp-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--grey-400); padding-top: 3px; }
+.opp-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+.opp-body { font-size: 12.5px; color: var(--grey-600); line-height: 1.5; }
+.timing-pill { display: inline-block; padding: 4px 12px; border-radius: var(--radius); font-size: 11px; font-weight: 700; text-align: center; }
+.timing-nu { background: var(--blue); color: white; }
+.timing-kort { background: var(--black); color: white; }
+.timing-lang { background: var(--grey-200); color: var(--black); }
+
+/* ── TAM/SAM/SOM ── */
+.tam-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--grey-200); border: 1px solid var(--grey-200); border-radius: var(--radius-card); overflow: hidden; }
+.tam-cell { padding: 28px 24px; }
+.tam-cell.white { background: white; }
+.tam-cell.light { background: var(--grey-100); }
+.tam-cell.dark { background: var(--black); color: white; }
+.tam-tag { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--grey-400); margin-bottom: 12px; }
+.tam-cell.dark .tam-tag { color: #555; }
+.tam-num { font-family: var(--font-display); font-size: clamp(32px, 4vw, 52px); font-weight: 800; letter-spacing: -0.04em; line-height: 1; margin-bottom: 14px; }
+.tam-cell.dark .tam-num { color: white; }
+
+/* ── Data table ── */
+.data-table { width: 100%; border-collapse: collapse; font-size: 11.5px; background: white; border: 1px solid var(--grey-200); border-radius: var(--radius-card); overflow: hidden; }
+.data-table th { padding: 10px 12px; font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; border-bottom: 2px solid var(--black); text-align: left; color: var(--grey-500); background: white; }
+.data-table td { padding: 9px 12px; border-bottom: 1px solid var(--grey-100); vertical-align: middle; }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table td:first-child { font-weight: 700; }
+.data-table tr:hover td { background: var(--grey-100); }
+.imp { color: var(--blue); font-weight: 600; font-size: 11px; }
+.partial { color: var(--grey-400); font-size: 11px; }
+.none-val { color: var(--grey-300); font-size: 11px; }
+
+/* ── Quote block ── */
+.quote-block { background: var(--black); color: white; border-radius: var(--radius-card); padding: 48px; margin: 48px 0; }
+.quote-text { font-family: var(--font-display); font-size: clamp(20px, 2.5vw, 32px); font-weight: 700; line-height: 1.25; max-width: 800px; }
+.quote-text em { color: var(--blue-light); font-style: normal; }
+
+/* ── Insight boxes ── */
+.insight-list { display: flex; flex-direction: column; gap: 0; }
+.insight-item { display: flex; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--grey-200); }
+.insight-item:last-child { border-bottom: none; }
+.insight-num { width: 26px; height: 26px; border-radius: 50%; background: var(--black); color: white; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+.insight-body { font-size: 13px; color: var(--grey-600); line-height: 1.55; }
+.insight-body strong { color: var(--black); }
+
+/* ── Layout helpers ── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+
+/* ── Animations ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-up   { animation: fadeUp 0.4s ease both; }
+.fade-up-2 { animation: fadeUp 0.4s 0.08s ease both; }
+.fade-up-3 { animation: fadeUp 0.4s 0.16s ease both; }
+.fade-up-4 { animation: fadeUp 0.4s 0.24s ease both; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     NAVBAR
+═══════════════════════════════════════ -->
+<nav id="navbar">
+  <div class="nav-inner">
+    <a class="nav-logo" onclick="showPage('home')">{{KLIENT_NAVN}} <span>·</span> {{MARKED_NAVN}}</a>
+    <div class="nav-links">
+      <button class="nav-link active" onclick="showPage('home')" data-page="home">Overblik</button>
+      <button class="nav-link" onclick="showPage('marked')" data-page="marked">Marked</button>
+      <button class="nav-link" onclick="showPage('konkurrenter')" data-page="konkurrenter">Konkurrenter</button>
+      <button class="nav-link" onclick="showPage('trends')" data-page="trends">Trends</button>
+      <button class="nav-link" onclick="showPage('muligheder')" data-page="muligheder">Muligheder</button>
+      <button class="nav-link" onclick="showPage('appendiks')" data-page="appendiks">Appendiks</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════
+     PAGE: OVERBLIK
+═══════════════════════════════════════ -->
+<div id="page-home" class="page active">
+  <div class="home-noise"></div>
+  <div class="home-grid-lines"></div>
+
+  <div class="home-hero fade-up">
+    <div class="home-tag">Markedsanalyse · {{DATO}}</div>
+    <h1 class="home-title">{{MARKED_NAVN_LINJE1}}<br>{{MARKED_NAVN_LINJE2}}<br>{{MARKED_NAVN_LINJE3}}</h1>
+    <p class="home-desc">{{EXECUTIVE_SUMMARY}}</p>
+    <div class="home-cta">
+      <button class="btn btn-white" onclick="showPage('marked')">Se analysen →</button>
+      <button class="btn btn-ghost" onclick="showPage('muligheder')">Strategiske muligheder</button>
+    </div>
+  </div>
+
+  <div class="home-kpis">
+    <div class="kpi-strip">
+      <!-- 5 KPI-items genereret af pipelinen -->
+      {{KPI_ITEMS}}
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: MARKED
+═══════════════════════════════════════ -->
+<div id="page-marked" class="page">
+  <div class="container">
+    <div class="section">
+      <div class="section-header fade-up">
+        <div class="label-tag">02 — Markedet</div>
+        <h2 class="display-lg">{{MARKED_HEADLINE}}</h2>
+        <div class="section-divider"></div>
+      </div>
+
+      <!-- Markedsandel + markedstilstand -->
+      <div class="two-col fade-up-2" style="align-items:start; gap:48px; margin-bottom:48px">
+        <div>
+          <div class="label-tag" style="margin-bottom:16px">Markedsandel · {{MARKEDSANDEL_METRIK}}</div>
+          <div class="bar-chart">
+            {{BAR_CHART_ITEMS}}
+          </div>
+          <p class="footnote">{{BAR_CHART_KILDE}}</p>
+        </div>
+
+        <div>
+          <div class="label-tag" style="margin-bottom:16px">Markedets tilstand</div>
+          <div class="quote-block" style="padding:32px;margin:0">
+            <p class="quote-text" style="font-size:clamp(16px,2vw,22px)">{{MARKEDSTILSTAND_CITAT}}</p>
+          </div>
+          <!-- 4 nøgletal -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--grey-200);border:1px solid var(--grey-200);border-radius:var(--radius-card);overflow:hidden;margin-top:16px">
+            {{MARKED_STATS_4}}
+          </div>
+        </div>
+      </div>
+
+      <!-- TAM/SAM/SOM -->
+      <div class="fade-up-3" style="margin-bottom:48px">
+        <div class="label-tag" style="margin-bottom:12px">Markedsstørrelse</div>
+        <h3 class="display-md" style="margin-bottom:24px">TAM / SAM / SOM</h3>
+        <div class="tam-grid">
+          <div class="tam-cell white">
+            <div class="tam-tag">TAM — Total Addressable Market</div>
+            <div class="tam-num">{{TAM_NUM}}</div>
+            <p class="body-md">{{TAM_BESKRIVELSE}}</p>
+            <p class="footnote">{{TAM_KILDE}}</p>
+          </div>
+          <div class="tam-cell light">
+            <div class="tam-tag">SAM — Serviceable Addressable Market</div>
+            <div class="tam-num">{{SAM_NUM}}</div>
+            <p class="body-md">{{SAM_BESKRIVELSE}}</p>
+            <p class="footnote">{{SAM_KILDE}}</p>
+          </div>
+          <div class="tam-cell dark">
+            <div class="tam-tag">SOM — Share of Market</div>
+            <div class="tam-num">{{SOM_NUM}}</div>
+            <p style="font-size:13px;color:#aaa;line-height:1.5">{{SOM_BESKRIVELSE}}</p>
+            <p style="font-size:10px;color:#555;margin-top:8px">{{SOM_KILDE}}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Markedsdrivere og barrierer -->
+      <div class="fade-up" style="margin-bottom:48px">
+        <div class="label-tag" style="margin-bottom:12px">Markedsdrivere og -barrierer</div>
+        <div class="two-col">
+          <div class="card">
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--blue)">Top vækstdrivere</div>
+            <div class="insight-list">{{DRIVERE_ITEMS}}</div>
+          </div>
+          <div class="card">
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--red)">Top barrierer og risici</div>
+            <div class="insight-list">{{BARRIERER_ITEMS}}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kundelandskab -->
+      <div class="fade-up" style="margin-bottom:48px">
+        <div class="label-tag" style="margin-bottom:12px">Kundelandskab</div>
+        <h3 class="display-md" style="margin-bottom:24px">Segmenter og købsadfærd</h3>
+        <div class="card">
+          <div class="insight-list">{{KUNDELANDSKAB_ITEMS}}</div>
+        </div>
+      </div>
+
+      <!-- Aktøroversigt -->
+      <div class="fade-up-3">
+        <div class="label-tag" style="margin-bottom:16px">Aktøroversigt</div>
+        <table class="cx-table">
+          <thead>
+            <tr>
+              <th>Aktør</th>
+              <th>Type / Ejerskab</th>
+              <th>Primær styrke</th>
+              <th>Kritisk svaghed</th>
+              <th>Strategisk retning</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{AKTOR_TABEL_ROWS}}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: KONKURRENTER
+═══════════════════════════════════════ -->
+<div id="page-konkurrenter" class="page">
+  <div class="container">
+    <div class="section">
+      <div class="section-header fade-up">
+        <div class="label-tag">03 — Konkurrenter</div>
+        <h2 class="display-lg">Konkurrent SWOT<br>— alle aktører</h2>
+        <div class="section-divider"></div>
+        <p class="body-lg" style="margin-top:16px;max-width:600px">Vælg aktør for fuld SWOT-analyse og strategisk scorecard.</p>
+      </div>
+
+      <!-- Dynamisk genererede tabs og SWOT-blokke -->
+      <div class="pill-tabs" id="swot-tabs">
+        {{KONKURRENT_TABS}}
+      </div>
+
+      {{KONKURRENT_BLOCKS}}
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: TRENDS
+═══════════════════════════════════════ -->
+<div id="page-trends" class="page">
+  <div class="container">
+    <div class="section">
+      <div class="section-header fade-up">
+        <div class="label-tag">04 — Trends</div>
+        <h2 class="display-lg">{{ANTAL_TRENDS}} branchetrends</h2>
+        <div class="section-divider"></div>
+      </div>
+
+      <div class="trend-grid fade-up-2">
+        {{TREND_CARDS}}
+      </div>
+
+      <!-- Trendmodenhed tabel -->
+      <div style="margin-top:64px" class="fade-up">
+        <div class="label-tag" style="margin-bottom:12px">Trendmodenhed — hvem har implementeret hvad?</div>
+        <h3 class="display-md" style="margin-bottom:24px">Implementeringsoverblik</h3>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Aktør</th>
+              {{TREND_MODENHED_HEADERS}}
+            </tr>
+          </thead>
+          <tbody>
+            {{TREND_MODENHED_ROWS}}
+          </tbody>
+        </table>
+        <p class="footnote" style="margin-top:10px">{{TREND_MODENHED_NOTE}}</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: MULIGHEDER
+═══════════════════════════════════════ -->
+<div id="page-muligheder" class="page">
+  <div class="container">
+    <div class="section">
+      <div class="section-header fade-up">
+        <div class="label-tag">05 — Muligheder</div>
+        <h2 class="display-lg">Strategiske<br>muligheder</h2>
+        <div class="section-divider"></div>
+      </div>
+
+      <div class="quote-block fade-up-2">
+        <p class="quote-text">{{MULIGHEDER_CITAT}}</p>
+      </div>
+
+      <div class="fade-up-3" style="margin-top:48px">
+        <div class="label-tag" style="margin-bottom:16px">Prioriterede handlinger</div>
+        <div>
+          {{OPP_ROWS}}
+        </div>
+      </div>
+
+      <!-- Strategisk paradigme -->
+      <div style="margin-top:64px" class="fade-up">
+        <div class="label-tag" style="margin-bottom:16px">Det strategiske paradigme</div>
+        <div style="background:var(--black);border-radius:var(--radius-card);padding:48px">
+          <p style="font-family:var(--font-display);font-size:clamp(28px,4vw,52px);font-weight:800;color:white;line-height:1.05;letter-spacing:-0.03em;margin-bottom:40px">
+            {{STRATEGISK_PARADIGME}}
+          </p>
+          <div class="three-col">
+            {{STRATEGISK_3COL}}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: APPENDIKS
+═══════════════════════════════════════ -->
+<div id="page-appendiks" class="page">
+  <div class="container">
+    <div class="section">
+      <div class="section-header fade-up">
+        <div class="label-tag">06 — Appendiks</div>
+        <h2 class="display-lg">Metode &amp;<br>Kilder</h2>
+        <div class="section-divider"></div>
+      </div>
+
+      <div class="two-col fade-up-2" style="align-items:start">
+        <div>
+          <div class="card">
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px">Metode</div>
+            <p class="body-md">{{METODE_BESKRIVELSE}}</p>
+            <div style="margin-top:16px">
+              <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--grey-500)">Datakilder anvendt</div>
+              <div class="insight-list">{{KILDE_ITEMS}}</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px">Definitioner</div>
+            <div class="insight-list">{{DEFINITION_ITEMS}}</div>
+          </div>
+          <div class="card" style="margin-top:16px;background:var(--blue-dim);border-color:#c0c0ff">
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px;color:var(--blue)">Analytisk usikkerhed</div>
+            <p style="font-size:12px;color:var(--grey-600);line-height:1.6">{{USIKKERHED_NOTE}}</p>
+          </div>
+          <div class="card" style="margin-top:16px">
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px">Analysedato</div>
+            <p style="font-size:12px;color:var(--grey-600)">Genereret: {{DATO}}<br>Data afskæringsdato: {{DATA_DATO}}</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════ -->
+<script>
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  const link = document.querySelector(`[data-page="${id}"]`);
+  if (link) link.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  setTimeout(() => {
+    document.querySelectorAll('#page-' + id + ' .fade-up, #page-' + id + ' .fade-up-2, #page-' + id + ' .fade-up-3, #page-' + id + ' .fade-up-4').forEach(el => {
+      el.style.animation = 'none';
+      el.offsetHeight;
+      el.style.animation = '';
+    });
+  }, 10);
+}
+
+function showCompany(id) {
+  document.querySelectorAll('.co-block').forEach(b => b.classList.add('hidden'));
+  document.querySelectorAll('#swot-tabs .pill-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('co-' + id).classList.remove('hidden');
+  document.querySelector(`#swot-tabs [data-co="${id}"]`).classList.add('active');
+}
+
+window.addEventListener('scroll', () => {
+  const nav = document.getElementById('navbar');
+  nav.style.boxShadow = window.scrollY > 20 ? '0 1px 24px rgba(0,0,0,0.08)' : 'none';
+});
+</script>
+
+</body>
+</html>
