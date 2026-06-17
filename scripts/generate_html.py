@@ -11,13 +11,14 @@ Output: HTML til stdout (eller fil hvis angivet)
 """
 
 import sys
-import io
 import json
 import pathlib
 import html as html_module
 
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
-sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
 from datetime import date
 
 SCRIPT_DIR = pathlib.Path(__file__).parent

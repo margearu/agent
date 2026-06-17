@@ -11,11 +11,14 @@ Output: JSON til stdout
 import sys
 import io
 import json
+import traceback
 import anthropic
 
 # Tving UTF-8 på stdout/stderr uanset terminal-locale
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
-sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
 
 RESEARCH_SYSTEM_PROMPT = """Du er en erfaren markedsresearcher specialiseret i det danske marked.
 Din opgave er at indsamle faktuelle data om et givet marked via websøgning.
@@ -227,6 +230,7 @@ def main():
         data = research_market(marked_navn)
     except Exception as e:
         print(f"FEJL i research: {e}", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
         sys.exit(1)
 
     print(json.dumps(data, ensure_ascii=False, indent=2))
