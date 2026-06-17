@@ -1,0 +1,221 @@
+#!/usr/bin/env python3
+"""
+Trin 3: Research-fase
+Indsamler rå markedsdata via Claude Sonnet + web search og returnerer struktureret JSON
+til analysefasen (Trin 4).
+
+Brug: python research.py "optik"
+Output: JSON til stdout
+"""
+
+import sys
+import json
+import anthropic
+
+RESEARCH_SYSTEM_PROMPT = """Du er en erfaren markedsresearcher specialiseret i det danske marked.
+Din opgave er at indsamle faktuelle data om et givet marked via websøgning.
+
+KILDEBEGRÆNSNING — du må KUN bruge følgende offentligt tilgængelige danske kilder:
+- Årsrapporter og virksomhedshjemmesider
+- Danmarks Statistik (dst.dk)
+- CVR / Erhvervsstyrelsen (cvr.dk, virk.dk)
+- Brancheorganisationer: Dansk Erhverv (danskerhverv.dk), DI (di.dk)
+- Konkurrence- og Forbrugerstyrelsen (kfst.dk)
+- Finanstilsynet (finanstilsynet.dk) — ved relevante brancher
+
+Ingen interne dokumenter, betalte databaser eller udenlandske kilder.
+
+Svar ALTID på dansk. Vær præcis med tal og kildehenvisninger.
+Angiv tydeligt skellet mellem faktabaserede oplysninger og kvalificerede vurderinger.
+"""
+
+RESEARCH_PROMPT_TEMPLATE = """Udfør en grundig markedsresearch om det danske {marked_navn}-marked.
+
+Søg efter og indsaml data til alle nedenstående felter. Brug web search aktivt.
+Returner et JSON-objekt med PRÆCIS disse felter — udfyld alle felter, brug "N/A" eller estimater med usikkerhedsangivelse hvis data ikke kan verificeres.
+
+{{
+  "marked_navn": "{marked_navn}",
+  "aar": "2025",
+  "dato": "<dagens dato>",
+  "executive_summary": "<3-5 sætninger: markedets størrelse, vækstrate, vigtigste driver, topanbefaling>",
+
+  "kpi_items": [
+    {{"label": "<KPI-navn>", "value": "<tal + enhed>", "kilde": "<kilde>"}},
+    {{"label": "<KPI-navn>", "value": "<tal + enhed>", "kilde": "<kilde>"}},
+    {{"label": "<KPI-navn>", "value": "<tal + enhed>", "kilde": "<kilde>"}},
+    {{"label": "<KPI-navn>", "value": "<tal + enhed>", "kilde": "<kilde>"}}
+  ],
+
+  "bar_chart_items": [
+    {{"navn": "<Aktørnavn>", "andel": <tal som heltal 0-100>, "kilde": "<kilde>"}},
+    {{"navn": "<Aktørnavn>", "andel": <tal som heltal 0-100>, "kilde": "<kilde>"}},
+    {{"navn": "<Aktørnavn>", "andel": <tal som heltal 0-100>, "kilde": "<kilde>"}},
+    {{"navn": "Øvrige", "andel": <resterende>, "kilde": "<kilde>"}}
+  ],
+  "bar_chart_kilde": "<kilde til markedsandelsoversigt>",
+
+  "markedstilstand_citat": "<kort karakteristik af markedet i ét slående citat/sætning>",
+
+  "marked_stats": {{
+    "vaeкstrate": "<% CAGR eller årsændring>",
+    "antal_virksomheder": "<antal>",
+    "beskæftigelse": "<antal ansatte>",
+    "gennemsnitlig_margin": "<% eller 'ikke tilgængeligt'>"
+  }},
+
+  "markedsandel_metrik": "<kort label til markedsandelsdiagram, f.eks. 'Markedsandel efter omsætning 2024'>",
+
+  "tam": {{
+    "num": "<tal + enhed, f.eks. '4,2 mia. kr.'>",
+    "beskrivelse": "<hvad TAM dækker>",
+    "kilde": "<kilde>"
+  }},
+  "sam": {{
+    "num": "<tal + enhed>",
+    "beskrivelse": "<hvad SAM dækker>",
+    "kilde": "<kilde>"
+  }},
+  "som": {{
+    "num": "<tal + enhed>",
+    "beskrivelse": "<hvad SOM dækker>",
+    "kilde": "<kilde>"
+  }},
+
+  "drivere": [
+    {{"titel": "<Drivernavn>", "beskrivelse": "<2-3 sætninger>"}},
+    {{"titel": "<Drivernavn>", "beskrivelse": "<2-3 sætninger>"}},
+    {{"titel": "<Drivernavn>", "beskrivelse": "<2-3 sætninger>"}}
+  ],
+
+  "barrierer": [
+    {{"titel": "<Barriernavn>", "beskrivelse": "<2-3 sætninger>"}},
+    {{"titel": "<Barriernavn>", "beskrivelse": "<2-3 sætninger>"}},
+    {{"titel": "<Barriernavn>", "beskrivelse": "<2-3 sætninger>"}}
+  ],
+
+  "kundelandskab": [
+    {{"segment": "<Segmentnavn>", "karakteristika": "<beskrivelse>", "andel": "<% af marked>"}},
+    {{"segment": "<Segmentnavn>", "karakteristika": "<beskrivelse>", "andel": "<% af marked>"}},
+    {{"segment": "<Segmentnavn>", "karakteristika": "<beskrivelse>", "andel": "<% af marked>"}}
+  ],
+
+  "aktorer": [
+    {{
+      "navn": "<Virksomhedsnavn>",
+      "type": "<dansk/international/offentlig>",
+      "omsaetning": "<kr. eller mia. kr.>",
+      "markedsandel": "<%>",
+      "position": "<markedsposition kort>"
+    }}
+  ],
+
+  "konkurrenter": [
+    {{
+      "navn": "<Virksomhedsnavn>",
+      "tagline": "<kort positionering>",
+      "profil": "<2-3 sætninger om virksomheden>",
+      "prissaetning": "premium|mid|value",
+      "styrker": ["<styrke 1>", "<styrke 2>", "<styrke 3>"],
+      "svagheder": ["<svaghed 1>", "<svaghed 2>", "<svaghed 3>"],
+      "muligheder": ["<mulighed 1>", "<mulighed 2>"],
+      "trusler": ["<trussel 1>", "<trussel 2>"],
+      "seneste_bevaegelser": "<hvad har de gjort senest>",
+      "omsaetning": "<kr.>",
+      "ansatte": "<antal>"
+    }}
+  ],
+
+  "trends": [
+    {{
+      "titel": "<Trendnavn>",
+      "beskrivelse": "<2-3 sætninger>",
+      "modenhed": "emerging|growing|mature",
+      "tidshorisont": "<1-2 år|3-5 år|5+ år>",
+      "paavirkningsgrad": "høj|medium|lav"
+    }}
+  ],
+
+  "muligheder": [
+    {{
+      "titel": "<Mulighedsnavn>",
+      "beskrivelse": "<2-3 sætninger>",
+      "timing": "<hvornår>",
+      "potentiale": "<estimeret størrelse eller vækstpotentiale>"
+    }}
+  ],
+
+  "strategisk_paradigme": "<overordnet strategisk karakteristik af markedet i ét udsagn>",
+  "strategisk_anbefaling_1": {{"titel": "<Anbefalingsnavn>", "beskrivelse": "<konkret anbefaling>"}},
+  "strategisk_anbefaling_2": {{"titel": "<Anbefalingsnavn>", "beskrivelse": "<konkret anbefaling>"}},
+  "strategisk_anbefaling_3": {{"titel": "<Anbefalingsnavn>", "beskrivelse": "<konkret anbefaling>"}},
+
+  "metode_beskrivelse": "<beskrivelse af dataindsamlingsmetode og kildekritik>",
+
+  "kilder": [
+    {{"titel": "<Kildetitel>", "url": "<URL eller 'ikke tilgængeligt'>", "dato": "<tilgangsdato>"}},
+    {{"titel": "<Kildetitel>", "url": "<URL eller 'ikke tilgængeligt'>", "dato": "<tilgangsdato>"}}
+  ],
+
+  "definitioner": [
+    {{"term": "<Fagterm>", "definition": "<definition>"}},
+    {{"term": "<Fagterm>", "definition": "<definition>"}}
+  ],
+
+  "usikkerhed_note": "<vigtigste forbehold og usikkerheder i analysen>",
+  "data_dato": "<dato for seneste data>"
+}}
+
+Udfyld alle felter med reelle data. Start med de bredeste søgninger (markedsstørrelse, aktører)
+og gå derefter i dybden på konkurrenter og trends. Returner KUN det rene JSON-objekt, ingen forklarende tekst.
+"""
+
+
+def research_market(marked_navn: str) -> dict:
+    client = anthropic.Anthropic()
+
+    prompt = RESEARCH_PROMPT_TEMPLATE.format(marked_navn=marked_navn)
+
+    with client.messages.stream(
+        model="claude-sonnet-4-6",
+        max_tokens=16000,
+        system=RESEARCH_SYSTEM_PROMPT,
+        tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": 20}],
+        thinking={"type": "adaptive"},
+        messages=[{"role": "user", "content": prompt}],
+    ) as stream:
+        response = stream.get_final_message()
+
+    # Udtræk JSON fra tekstblokke
+    json_text = ""
+    for block in response.content:
+        if block.type == "text":
+            json_text += block.text
+
+    # Find JSON-objektet
+    start = json_text.find("{")
+    end = json_text.rfind("}") + 1
+    if start == -1 or end == 0:
+        raise ValueError(f"Intet JSON fundet i svar. Svar: {json_text[:500]}")
+
+    return json.loads(json_text[start:end])
+
+
+def main():
+    if len(sys.argv) < 2:
+        print("Brug: python research.py <marked-navn>", file=sys.stderr)
+        print('Eksempel: python research.py "optik"', file=sys.stderr)
+        sys.exit(1)
+
+    marked_navn = sys.argv[1]
+    print(f"Starter research: {marked_navn} ...", file=sys.stderr)
+
+    data = research_market(marked_navn)
+
+    print(json.dumps(data, ensure_ascii=False, indent=2))
+    print(f"Research færdig. Fundet {len(data.get('konkurrenter', []))} konkurrenter, "
+          f"{len(data.get('trends', []))} trends.", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    main()
