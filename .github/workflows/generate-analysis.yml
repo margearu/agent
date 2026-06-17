@@ -63,6 +63,8 @@ jobs:
 
       # ── 6. HTML-generering ────────────────────────────────────────────────
       - name: Generér HTML
+        env:
+          GATE_PASSWORD: ${{ secrets.GATE_PASSWORD }}
         run: |
           SLUG="${{ steps.vars.outputs.slug }}"
           mkdir -p "$SLUG"

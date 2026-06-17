@@ -633,10 +633,73 @@ body {
 </div>
 
 <!-- ═══════════════════════════════════════
+     PASSWORD GATE OVERLAY
+═══════════════════════════════════════ -->
+<div id="gate-overlay" style="display:none;position:fixed;inset:0;background:rgba(10,10,10,0.85);backdrop-filter:blur(6px);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:var(--white);border-radius:16px;padding:40px 48px;max-width:400px;width:90%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.3)">
+    <div style="font-size:32px;margin-bottom:16px">🔒</div>
+    <h2 style="font-size:22px;font-weight:800;letter-spacing:-0.03em;margin-bottom:8px">Begrænset adgang</h2>
+    <p style="font-size:14px;color:var(--grey-500);margin-bottom:24px;line-height:1.5">Denne sektion kræver adgangskode.</p>
+    <input
+      id="gate-input"
+      type="password"
+      placeholder="Adgangskode"
+      style="width:100%;padding:14px 16px;font-size:15px;border:2px solid var(--grey-200);border-radius:8px;outline:none;margin-bottom:12px;font-family:inherit;transition:border-color 0.15s"
+      onkeydown="if(event.key==='Enter')gateSubmit()"
+      onfocus="this.style.borderColor='var(--blue)'"
+      onblur="this.style.borderColor='var(--grey-200)'"
+    >
+    <div id="gate-error" style="color:var(--red);font-size:13px;margin-bottom:12px;min-height:18px"></div>
+    <button onclick="gateSubmit()" style="width:100%;padding:14px;font-size:15px;font-weight:700;background:var(--black);color:white;border:none;border-radius:8px;cursor:pointer;font-family:inherit">
+      Bekræft →
+    </button>
+    <button onclick="gateClose()" style="margin-top:10px;background:none;border:none;font-size:13px;color:var(--grey-500);cursor:pointer;font-family:inherit">
+      Annuller
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
      JAVASCRIPT
 ═══════════════════════════════════════ -->
 <script>
+// Password-gating — ikke reel sikkerhed, kun speedbump for tilfældige besøgende
+const GATE_PASSWORD = "{{GATE_PASSWORD}}";
+const GATED_PAGES = ["muligheder"];
+let _pendingPage = null;
+
+function _gateUnlocked() {
+  return !GATE_PASSWORD || sessionStorage.getItem("gate_ok") === "1";
+}
+
+function gateSubmit() {
+  const val = document.getElementById("gate-input").value;
+  if (val === GATE_PASSWORD) {
+    sessionStorage.setItem("gate_ok", "1");
+    document.getElementById("gate-overlay").style.display = "none";
+    document.getElementById("gate-input").value = "";
+    document.getElementById("gate-error").textContent = "";
+    if (_pendingPage) { showPage(_pendingPage); _pendingPage = null; }
+  } else {
+    document.getElementById("gate-error").textContent = "Forkert adgangskode — prøv igen.";
+    document.getElementById("gate-input").select();
+  }
+}
+
+function gateClose() {
+  document.getElementById("gate-overlay").style.display = "none";
+  document.getElementById("gate-input").value = "";
+  document.getElementById("gate-error").textContent = "";
+  _pendingPage = null;
+}
+
 function showPage(id) {
+  if (GATE_PASSWORD && GATED_PAGES.includes(id) && !_gateUnlocked()) {
+    _pendingPage = id;
+    document.getElementById("gate-overlay").style.display = "flex";
+    setTimeout(() => document.getElementById("gate-input").focus(), 50);
+    return;
+  }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');

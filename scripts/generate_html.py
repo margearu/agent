@@ -291,7 +291,7 @@ def marked_navn_split(navn: str) -> tuple[str, str, str]:
 
 # ─── Hovedfunktion ─────────────────────────────────────────────────────────────
 
-def generate(data: dict) -> str:
+def generate(data: dict, gate_password: str = "") -> str:
     template = TEMPLATE_PATH.read_text(encoding="utf-8")
 
     marked = data.get("marked_navn", "Marked")
@@ -353,6 +353,7 @@ def generate(data: dict) -> str:
         "{{DEFINITION_ITEMS}}": definition_items(data.get("definitioner", [])),
         "{{USIKKERHED_NOTE}}": H(data.get("usikkerhed_note", "")),
         "{{DATA_DATO}}": H(data.get("data_dato", "")),
+        "{{GATE_PASSWORD}}": gate_password,  # ikke HTML-escaped — bruges i JS-streng
     }
 
     result = template
@@ -386,10 +387,13 @@ def main():
         print("Indlæser analyse fra stdin ...", file=sys.stderr)
         data = json.load(sys.stdin)
 
+    import os
+    gate_password = os.environ.get("GATE_PASSWORD", "")
+
     marked_navn = data.get("marked_navn", "ukendt")
     print(f"Genererer HTML for: {marked_navn} ...", file=sys.stderr)
 
-    html_output = generate(data)
+    html_output = generate(data, gate_password)
 
     # Output: fil-argument eller stdout
     if len(sys.argv) >= 3:
