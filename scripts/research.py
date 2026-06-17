@@ -246,13 +246,124 @@ def research_market(marked_navn: str) -> dict:
     return json.loads(json_text[start:end])
 
 
+TEST_DATA = {
+  "marked_navn": "optik",
+  "aar": "2025",
+  "dato": "2025-06-17",
+  "executive_summary": "Det danske optikmarked omsætter for ca. 3,5 mia. kr. årligt og domineres af to store kæder. Markedet vokser 2-3% om året drevet af en aldrende befolkning og øget skærmforbrug.",
+  "kpi_items": [
+    {"label": "Markedsstørrelse", "value": "3,5 mia. kr.", "kilde": "Optikerforeningen 2024"},
+    {"label": "Vækstrate", "value": "2-3% p.a.", "kilde": "Dansk Erhverv"},
+    {"label": "Antal butikker", "value": "ca. 900", "kilde": "CVR 2024"},
+    {"label": "Beskæftigelse", "value": "ca. 4.500", "kilde": "DST"}
+  ],
+  "bar_chart_items": [
+    {"navn": "Louis Nielsen", "andel": 35, "kilde": "Brancheestimater"},
+    {"navn": "Synoptik", "andel": 25, "kilde": "Brancheestimater"},
+    {"navn": "Øvrige", "andel": 40, "kilde": "Brancheestimater"}
+  ],
+  "bar_chart_kilde": "Brancheestimater 2024",
+  "markedstilstand_citat": "Konsolideret marked med to dominerende kæder og et langt felt af uafhængige optikere.",
+  "marked_stats": {
+    "vaeкstrate": "2-3% CAGR",
+    "antal_virksomheder": "ca. 450",
+    "beskæftigelse": "ca. 4.500",
+    "gennemsnitlig_margin": "ca. 40%"
+  },
+  "markedsandel_metrik": "Markedsandel efter omsætning 2024",
+  "tam": {"num": "3,5 mia. kr.", "beskrivelse": "Samlet dansk optikmarked inkl. kontaktlinser", "kilde": "Optikerforeningen"},
+  "sam": {"num": "2,5 mia. kr.", "beskrivelse": "Brilleoptik og synsprøver", "kilde": "Brancheestimater"},
+  "som": {"num": "500 mio. kr.", "beskrivelse": "Tilgængeligt for ny aktør inden for 3 år", "kilde": "Vurdering"},
+  "drivere": [
+    {"titel": "Aldrende befolkning", "beskrivelse": "Stigende andel af danskere over 50 øger efterspørgslen på briller og linser markant."},
+    {"titel": "Skærmforbrug", "beskrivelse": "Øget digitalt forbrug accelererer synsproblemer i alle aldersgrupper."},
+    {"titel": "Modetrend", "beskrivelse": "Briller er blevet et modeobjekt — forbrugerne køber flere stel."}
+  ],
+  "barrierer": [
+    {"titel": "Høj konkurrence", "beskrivelse": "To store kæder med stordriftsfordele presser marginer for mindre aktører."},
+    {"titel": "Online pres", "beskrivelse": "Udenlandske onlinebutikker underminerer priserne på standardglas."},
+    {"titel": "Krav til uddannelse", "beskrivelse": "Optikere kræver 4-årig uddannelse — begrænser hurtig skalering."}
+  ],
+  "kundelandskab": [
+    {"segment": "Seniorer (55+)", "karakteristika": "Hyppige brugere, loyale over for lokal optiker, pris-tolerante", "andel": "40%"},
+    {"segment": "Arbejdsaktive (30-54)", "karakteristika": "Kombinerer arbejds- og fritidsbriller, modebevidste", "andel": "35%"},
+    {"segment": "Unge (under 30)", "karakteristika": "Pris-sensitive, online-åbne, kontaktlinsebrugere", "andel": "25%"}
+  ],
+  "aktorer": [
+    {"navn": "Louis Nielsen", "type": "international", "omsaetning": "ca. 1,2 mia. kr.", "markedsandel": "35%", "position": "Markedsleder på volumen"},
+    {"navn": "Synoptik", "type": "international", "omsaetning": "ca. 875 mio. kr.", "markedsandel": "25%", "position": "Premium-positioneret"}
+  ],
+  "konkurrenter": [
+    {
+      "navn": "Louis Nielsen",
+      "tagline": "Danmarks største optikerkæde",
+      "profil": "Ejet af Specsavers. Stærk volumenposition med aggressive priser og bred tilstedeværelse i hele landet.",
+      "prissaetning": "value",
+      "styrker": ["Stordriftsfordele", "Stærk brand-kendskab", "Bred geografisk dækning"],
+      "svagheder": ["Lavt premium-image", "Standardiseret oplevelse", "Afhængig af britisk moderkoncern"],
+      "muligheder": ["Digital synsprøve", "Abonnementsmodeller"],
+      "trusler": ["Online-konkurrence", "Premium-segmentet vokser fra dem"],
+      "seneste_bevaegelser": "Øget digital markedsføring og online booking.",
+      "omsaetning": "ca. 1,2 mia. kr.",
+      "ansatte": "ca. 800"
+    },
+    {
+      "navn": "Synoptik",
+      "tagline": "Premium optik med bred service",
+      "profil": "Ejet af EssilorLuxottica via GrandVision. Premium-positioneret med fokus på kvalitet og rådgivning.",
+      "prissaetning": "premium",
+      "styrker": ["Stærkt premium-image", "Internationalt netværk", "Bred sortiment"],
+      "svagheder": ["Høje priser begrænser markedsandel", "Kompleks koncernstruktur"],
+      "muligheder": ["Voksende premium-segment", "Luksusbrilletrend"],
+      "trusler": ["Prisbevidste forbrugere", "Direkte onlinesalg fra brands"],
+      "seneste_bevaegelser": "Lanceret Smarteyes som discountkoncept.",
+      "omsaetning": "ca. 875 mio. kr.",
+      "ansatte": "ca. 600"
+    }
+  ],
+  "trends": [
+    {"titel": "Digitale synsprøver", "beskrivelse": "Fjernsynsprøver via app og teleoptik vinder frem.", "modenhed": "emerging", "tidshorisont": "1-2 år", "paavirkningsgrad": "høj"},
+    {"titel": "Bæredygtige stel", "beskrivelse": "Forbrugere efterspørger bionedbrydelige og genbrugsmaterialer.", "modenhed": "growing", "tidshorisont": "3-5 år", "paavirkningsgrad": "medium"}
+  ],
+  "muligheder": [
+    {"titel": "Abonnementsmodel", "beskrivelse": "Månedligt abonnement på briller og linser — lav adgangsbarriere for forbrugeren.", "timing": "1-2 år", "potentiale": "500 mio. kr. TAM"},
+    {"titel": "B2B arbejdsbriller", "beskrivelse": "Virksomhedsaftaler om arbejds- og skærmbriller til ansatte.", "timing": "Nu", "potentiale": "200 mio. kr."}
+  ],
+  "strategisk_paradigme": "Skalér eller specialisér — midterfeltet er under pres fra kæder nedefra og premium oppe fra.",
+  "strategisk_anbefaling_1": {"titel": "Differentiér på service", "beskrivelse": "Investér i rådgivningskvalitet og oplevelse som discount-kæderne ikke kan matche."},
+  "strategisk_anbefaling_2": {"titel": "Byg B2B-pipeline", "beskrivelse": "Indgå aftaler med virksomheder om skærmbriller — stabilt og margen-stærkt segment."},
+  "strategisk_anbefaling_3": {"titel": "Digital synsprøve", "beskrivelse": "Lancér app-baseret forsøgsprøve for at nå unge og distante kunder."},
+  "metode_beskrivelse": "TEST-DATA — ikke baseret på reel websøgning. Bruges til at validere pipeline.",
+  "kilder": [
+    {"titel": "Optikerforeningen", "url": "https://optikerforeningen.dk", "dato": "2024"},
+    {"titel": "Danmarks Statistik", "url": "https://dst.dk", "dato": "2024"}
+  ],
+  "definitioner": [
+    {"term": "TAM", "definition": "Total Addressable Market — det samlede marked hvis man havde 100% markedsandel."},
+    {"term": "Optiker", "definition": "Uddannet fagperson med 4-årig professionsbacheloruddannelse i optometri."}
+  ],
+  "usikkerhed_note": "TEST-DATA. Tal er estimater til pipeline-validering og må ikke bruges analytisk.",
+  "data_dato": "2025-06-17"
+}
+
+
 def main():
     if len(sys.argv) < 2:
-        print("Brug: python research.py <marked-navn>", file=sys.stderr)
+        print("Brug: python research.py <marked-navn> [--test]", file=sys.stderr)
         print('Eksempel: python research.py "optik"', file=sys.stderr)
         sys.exit(1)
 
     marked_navn = sys.argv[1]
+    test_mode = "--test" in sys.argv
+
+    if test_mode:
+        print(f"TEST-TILSTAND: springer API over, returnerer dummy-data for '{marked_navn}'", file=sys.stderr)
+        data = TEST_DATA.copy()
+        data["marked_navn"] = marked_navn
+        print(json.dumps(data, ensure_ascii=False, indent=2))
+        print("Research færdig (test). Fundet 2 konkurrenter, 2 trends.", file=sys.stderr)
+        return
+
     print(f"Starter research: {marked_navn} ...", file=sys.stderr)
 
     try:
