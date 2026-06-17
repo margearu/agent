@@ -219,7 +219,7 @@ def research_market(marked_navn: str) -> dict:
         model="claude-sonnet-4-6",
         max_tokens=16000,
         system=RESEARCH_SYSTEM_PROMPT,
-        tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": 20}],
+        tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": 5}],
         messages=[{"role": "user", "content": prompt}],
     ) as stream:
         response = stream.get_final_message()
