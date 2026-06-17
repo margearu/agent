@@ -1,0 +1,111 @@
+name: Generer markedsanalyse
+
+on:
+  repository_dispatch:
+    types: [generate-analysis]
+
+# Forhindrer parallelle kørsler — én analyse ad gangen (Trin 9 udvider dette)
+concurrency:
+  group: generate-analysis
+  cancel-in-progress: false
+
+jobs:
+  analyse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # ── 1. Checkout ────────────────────────────────────────────────────────
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── 2. Python + dependencies ───────────────────────────────────────────
+      - name: Opsæt Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Installér afhængigheder
+        run: pip install anthropic
+
+      # ── 3. Læs markedsnavn og byg slug ────────────────────────────────────
+      - name: Sæt markedsnavn og slug
+        id: vars
+        run: |
+          MARKED="${{ github.event.client_payload.marked }}"
+          # Slug: lowercase, mellemrum → bindestreg, kun alfanumerisk + bindestreg
+          SLUG=$(echo "$MARKED" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9æøå]/-/g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//')
+          DATO=$(date +%Y-%m-%d)
+          AAR=$(date +%Y)
+          echo "marked=$MARKED" >> $GITHUB_OUTPUT
+          echo "slug=$SLUG"     >> $GITHUB_OUTPUT
+          echo "dato=$DATO"     >> $GITHUB_OUTPUT
+          echo "aar=$AAR"       >> $GITHUB_OUTPUT
+
+      # ── 4. Research (Sonnet + web search) ─────────────────────────────────
+      - name: Research — indsaml markedsdata
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python scripts/research.py "${{ steps.vars.outputs.marked }}" \
+            > /tmp/research.json
+
+      # ── 5. Analyse (Opus + strategisk konsulent-prompt) ───────────────────
+      - name: Analyse — strategisk syntese
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python scripts/analyze.py /tmp/research.json \
+            > /tmp/analyse.json
+
+      # ── 6. HTML-generering ────────────────────────────────────────────────
+      - name: Generér HTML
+        run: |
+          SLUG="${{ steps.vars.outputs.slug }}"
+          mkdir -p "$SLUG"
+          python scripts/generate_html.py /tmp/analyse.json "$SLUG/index.html"
+
+      # ── 7. Opdatér manifest.json ──────────────────────────────────────────
+      - name: Opdatér manifest
+        run: |
+          python - <<'PYEOF'
+          import json, pathlib, sys
+
+          manifest_path = pathlib.Path("manifest.json")
+          manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {"analyser": []}
+
+          slug  = "${{ steps.vars.outputs.slug }}"
+          marked = "${{ steps.vars.outputs.marked }}"
+          dato  = "${{ steps.vars.outputs.dato }}"
+          aar   = "${{ steps.vars.outputs.aar }}"
+
+          # Fjern evt. eksisterende post med samme slug (opdatering)
+          manifest["analyser"] = [a for a in manifest["analyser"] if a.get("slug") != slug]
+
+          manifest["analyser"].append({
+              "navn": marked,
+              "slug": slug,
+              "dato": dato,
+              "aar":  aar,
+          })
+
+          manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2))
+          print(f"Manifest opdateret: {len(manifest['analyser'])} analyse(r)")
+          PYEOF
+
+      # ── 8. Commit og push ─────────────────────────────────────────────────
+      - name: Commit og push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          SLUG="${{ steps.vars.outputs.slug }}"
+          MARKED="${{ steps.vars.outputs.marked }}"
+          DATO="${{ steps.vars.outputs.dato }}"
+
+          git add "$SLUG/index.html" manifest.json
+          git commit -m "Analyse: ${MARKED} (${DATO})"
+          git push
